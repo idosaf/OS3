@@ -64,10 +64,10 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 }
 
 void waitForJob(JobHandle job){
-    printf("waiting \n");
+    //printf("waiting \n");
     JobContext * myJob = (JobContext *) job;
     myJob->waiter();
-    printf("done waiting \n");
+  //  printf("done waiting \n");
 
 }
 void getJobState(JobHandle job, JobState* state){
@@ -75,7 +75,7 @@ void getJobState(JobHandle job, JobState* state){
     myJob->get_state(state);
 }
 void closeJobHandle(JobHandle job){
-    printf("closing \n");
+   // printf("closing \n");
     waitForJob(job);
     JobContext * myJob = (JobContext *) job;
     delete myJob;

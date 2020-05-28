@@ -37,8 +37,6 @@ private:
     pthread_t* threads;
     pthread_mutex_t* muts;
     pthread_mutex_t outputMut;
-    pthread_mutex_t waitMut;
-    pthread_cond_t waitcv;
     Barrier barr;
 
 
@@ -76,7 +74,6 @@ public:
     void reduceUpdate(); //update percentage of reduce phase
 
     void waiter(); //wait until job is done
-    void imDone();
 };
 
 #endif //PROJECT3_JOBCONTEXT_H
