@@ -103,7 +103,7 @@ printf("dtor\n");
 
 
 void JobContext::get_state(JobState* _state){
-    printf("getstate");
+    printf("getstate\n");
     if(pthread_mutex_lock(&muts[tnum-1])!=0) { //lock state mutex
         fprintf(stderr, "system error: mutex error\n");
         exit(1);
@@ -118,7 +118,7 @@ void JobContext::get_state(JobState* _state){
 }
 
 pthread_t* JobContext::get_threads(){
-    printf("getthreads\n";)
+    printf("getthreads\n");
     return threads;
 }
 pthread_mutex_t* JobContext::get_muts(){
@@ -200,27 +200,35 @@ vector<IntermediatePair >** JobContext::get_vecs(){ //return pointer to array of
     return vecs;
 }
 int JobContext::getMyVec(){ //assigns vectors to mapping threads
+    printf("getmymuts\n");
     return ((vecAssign)++);
 }
 int JobContext::getMyPair(){ //assigns pairs (k1-v1 or k2-v2vector) to threads
+    printf("getmypair\n");
     return (nextPair)++;
 }
 int JobContext::getDoneThreads(){ //used to know when map finished
+    printf("getDonethre\n");
     int num=( (--doneThreads) ==0);
     return num;
 }
 const MapReduceClient& JobContext::get_client(){ //return reference to client
+    printf("getclient\n");
+
     return client;
 }
 InputVec JobContext::getInputVec(){ //returns input vector
+    printf("getinputvec\n");
     return input;
 }
 
 int JobContext::getInPairs(){ //returns amount of pairs in input vector
+    printf("getinpairs\n");
     return inPairs;
 }
 
 int JobContext::getTnum(){ //returns amount of threads
+    printf("gettnum\n");
     return tnum;
 }
 
@@ -230,7 +238,7 @@ void JobContext::setMapState() //sets state to MAP_STAGE
     state.stage = MAP_STAGE;
 }
 void JobContext::endMapStage() {
-
+    printf("endmapstage\n");
     if(pthread_mutex_lock(&muts[tnum-1])!=0){ //lock state mutex
         fprintf(stderr, "system error: mutex error\n");
         exit(1);
@@ -253,7 +261,7 @@ void JobContext::endMapStage() {
 }
 
 void JobContext::mapUpdate(int x) { //update percentage of map phase
-
+    printf("mapUpdate\n");
     if(pthread_mutex_lock(&muts[tnum-1])!=0){ //lock state mutex
         fprintf(stderr, "system error: mutex error\n");
         exit(1);
@@ -271,7 +279,7 @@ void JobContext::mapUpdate(int x) { //update percentage of map phase
 }
 
 void JobContext::shuffleUpdate(){
-
+    printf("shuffleupdate\n");
 
 
     if(pthread_mutex_lock(&muts[tnum-1])!=0){ //lock state mutex
@@ -296,6 +304,7 @@ void JobContext::shuffleUpdate(){
 }
 
 atomic <int>* JobContext::getK2V2s(){ //returns a reference to k2v2 counter
+    printf("getK2v2s\n");
     return &k2v2s;
 }
 
@@ -314,8 +323,6 @@ void JobContext::pushToMap(vector <IntermediatePair>* vecToMap){
         shuffleUpdate();
     }
 };
-
-
 
 void JobContext::activateBarr(){
     printf("barrier\n");
@@ -362,6 +369,7 @@ printf("reduceupdate\n");
 }
 
 void JobContext::waiter() {
+    printf("waiter\n");
     for (int i = 0; i < tnum; i++) {
         if (pthread_join(threads[i], NULL) != 0) {
             fprintf(stderr, "system error: thread release error\n");
@@ -371,6 +379,7 @@ void JobContext::waiter() {
 }
 
 void JobContext::init_threads(JobHandle myJob) {
+    printf("initthreads\n");
     for (int i = 0; i < tnum-1; ++i) {
         if(pthread_create(threads + i, nullptr, mapper, myJob)!=0){
             fprintf(stderr, "system error: thread error\n");
