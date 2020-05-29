@@ -21,7 +21,7 @@ struct mapContext{  //struct to send to emit3 via reduce
 JobContext::JobContext(int n, const InputVec& _input, OutputVec& _output,const MapReduceClient& _client):
         client(_client),  tnum(n),  k2vec(new vector<K2*>), barr(Barrier(n)), output(_output){
 
-printf("ctor\n");
+//printf("ctor\n");
     vecAssign=0; //used to assign vectors to threads
     nextPair=0; //amount of pairs we handed out to threads
     doneMaps=0;// amount of pairs from input mapped
@@ -69,7 +69,7 @@ printf("ctor\n");
 
 }
 JobContext::~JobContext(){
-printf("dtor\n");
+//printf("dtor\n");
     //--------------------------------------- destroy mutexes
 
 
@@ -103,7 +103,7 @@ printf("dtor\n");
 
 
 void JobContext::get_state(JobState* _state){
-    printf("getstate\n");
+   // printf("getstateeeeeeeeeeeeee\n");
     if(pthread_mutex_lock(&muts[tnum-1])!=0) { //lock state mutex
         fprintf(stderr, "system error: mutex error\n");
         exit(1);
@@ -118,43 +118,17 @@ void JobContext::get_state(JobState* _state){
 }
 
 pthread_t* JobContext::get_threads(){
-    printf("getthreads\n");
+ //   printf("getthreads\n");
     return threads;
 }
 pthread_mutex_t* JobContext::get_muts(){
-    printf("getmuts\n");
+   // printf("getmuts\n");
     return muts;
 }
 
-
-void * mapper(void* inCon){ //used to manage map phase
-    printf("in mapper \n");
-    JobContext * context =(JobContext*) inCon; //cast context to desired type
-    int vecNum=context->getMyVec(); //use atomic counter to get assigned vector number
-    vector<IntermediatePair>* myVec=context->get_vecs()[vecNum]; //get assigned vector
-    pthread_mutex_t* myMut=&context->get_muts()[vecNum]; //get assigned mutex
-    int pairNum=context->getMyPair(); //using atomic variable to assign pairs to map
-    int x=0;
-    int* my_outputs=&x;
-    mapContext mycon = {myMut,myVec, my_outputs};
-    while (pairNum<context->getInPairs()) //while we didn't reach the end of the vector
-    {
-        *(my_outputs)=0;
-        //InputPair myPair = context->getInputVec()[pairNum]; //get pair from input vector
-        context->get_client().map(context->getInputVec()[pairNum].first, context->getInputVec()[pairNum].second, &mycon); //map the pair
-        context->mapUpdate(*(my_outputs)); //update state and percentage
-        pairNum = context->getMyPair(); //get next pair number
-    }
-    if (context->getDoneThreads()) { //this function uses an atomic variable to notify if all other threads finished mapping
-        context->endMapStage(); //updates "state" accordingly
-    }
-    context->activateBarr(); //barrier to wait till al threads finish mapping
-    context->reducer(); //reduce stage
-    return 0;
-}
 void * shuffle(void* inCon){
 
-    printf("shuffle\n");
+    //   printf("shuffle\n");
     JobContext * context =(JobContext*) inCon;
     int i = 0;
     vector<IntermediatePair> vecToMap; //we empty vectors in to this vectors and then empty them into the map
@@ -195,50 +169,80 @@ void * shuffle(void* inCon){
     return 0;
 }
 
+void * mapper(void* inCon){ //used to manage map phase
+ //   printf("in mapper \n");
+    JobContext * context =(JobContext*) inCon; //cast context to desired type
+    int vecNum=context->getMyVec(); //use atomic counter to get assigned vector number
+    vector<IntermediatePair>* myVec=context->get_vecs()[vecNum]; //get assigned vector
+    pthread_mutex_t* myMut=&context->get_muts()[vecNum]; //get assigned mutex
+    int pairNum=context->getMyPair(); //using atomic variable to assign pairs to map
+    int x=0;
+    int* my_outputs=&x;
+    mapContext mycon = {myMut,myVec, my_outputs};
+    while (pairNum<context->getInPairs()) //while we didn't reach the end of the vector
+    {
+        *(my_outputs)=0;
+        //InputPair myPair = context->getInputVec()[pairNum]; //get pair from input vector
+        context->get_client().map(context->getInputVec()[pairNum].first, context->getInputVec()[pairNum].second, &mycon); //map the pair
+        context->mapUpdate(*(my_outputs)); //update state and percentage
+        pairNum = context->getMyPair(); //get next pair number
+    }
+    if (context->getDoneThreads()) { //this function uses an atomic variable to notify if all other threads finished mapping
+        context->endMapStage(); //updates "state" accordingly
+    }
+    context->activateBarr(); //barrier to wait till al threads finish mapping
+
+
+
+    context->reducer(); //reduce stage
+
+    return 0;
+}
+
 vector<IntermediatePair >** JobContext::get_vecs(){ //return pointer to array of vectors used for mapped keys
-    printf("getvecs\n");
+   // printf("getvecs\n");
     return vecs;
 }
 int JobContext::getMyVec(){ //assigns vectors to mapping threads
-    printf("getmymuts\n");
+  //  printf("getmymuts\n");
     return ((vecAssign)++);
 }
 int JobContext::getMyPair(){ //assigns pairs (k1-v1 or k2-v2vector) to threads
-    printf("getmypair\n");
+  //  printf("getmypair\n");
     return (nextPair)++;
 }
 int JobContext::getDoneThreads(){ //used to know when map finished
-    printf("getDonethre\n");
+  //  printf("getDonethre\n");
     int num=( (--doneThreads) ==0);
     return num;
 }
 const MapReduceClient& JobContext::get_client(){ //return reference to client
-    printf("getclient\n");
+ //   printf("getclient\n");
 
     return client;
 }
 InputVec JobContext::getInputVec(){ //returns input vector
-    printf("getinputvec\n");
+ //   printf("getinputvec\n");
     return input;
 }
 
 int JobContext::getInPairs(){ //returns amount of pairs in input vector
-    printf("getinpairs\n");
+  //  printf("getinpairs\n");
     return inPairs;
 }
 
 int JobContext::getTnum(){ //returns amount of threads
-    printf("gettnum\n");
+  //  printf("gettnum\n");
     return tnum;
 }
 
 void JobContext::setMapState() //sets state to MAP_STAGE
 {
-    printf("setMapState");
+  //  printf("setMapState");
     state.stage = MAP_STAGE;
 }
 void JobContext::endMapStage() {
-    printf("endmapstage\n");
+  //  printf("endmapstage\n");
     if(pthread_mutex_lock(&muts[tnum-1])!=0){ //lock state mutex
         fprintf(stderr, "system error: mutex error\n");
         exit(1);
@@ -261,7 +265,7 @@ void JobContext::endMapStage() {
 }
 
 void JobContext::mapUpdate(int x) { //update percentage of map phase
-    printf("mapUpdate\n");
+   // printf("mapUpdate\n");
     if(pthread_mutex_lock(&muts[tnum-1])!=0){ //lock state mutex
         fprintf(stderr, "system error: mutex error\n");
         exit(1);
@@ -279,7 +283,7 @@ void JobContext::mapUpdate(int x) { //update percentage of map phase
 }
 
 void JobContext::shuffleUpdate(){
-    printf("shuffleupdate\n");
+  //  printf("shuffleupdate\n");
 
 
     if(pthread_mutex_lock(&muts[tnum-1])!=0){ //lock state mutex
@@ -304,12 +308,12 @@ void JobContext::shuffleUpdate(){
 }
 
 atomic <int>* JobContext::getK2V2s(){ //returns a reference to k2v2 counter
-    printf("getK2v2s\n");
+  //  printf("getK2v2s\n");
     return &k2v2s;
 }
 
 void JobContext::pushToMap(vector <IntermediatePair>* vecToMap){
-    printf("pushtomap\n");
+   // printf("pushtomap\n");
     while (!vecToMap->empty()) {
         IntermediatePair toMap = vecToMap->back();
         vecToMap->pop_back();
@@ -325,12 +329,12 @@ void JobContext::pushToMap(vector <IntermediatePair>* vecToMap){
 };
 
 void JobContext::activateBarr(){
-    printf("barrier\n");
+   // printf("barrier\n");
     barr.barrier();
 }
 
 void JobContext::reducer(){
-    printf("reducer\n");
+ //   printf("reducer\n");
     int keyNum=getMyPair();
 
     reduceContext myCon={output, &outputMut};
@@ -349,7 +353,7 @@ void JobContext::reducer(){
 }
 
 void JobContext::reduceUpdate(){
-printf("reduceupdate\n");
+//printf("reduceupdate\n");
     if(pthread_mutex_lock(&muts[tnum-1])!=0){
         fprintf(stderr, "system error: mutex error\n");
         exit(1);
@@ -369,7 +373,7 @@ printf("reduceupdate\n");
 }
 
 void JobContext::waiter() {
-    printf("waiter\n");
+  //  printf("waiter\n");
     for (int i = 0; i < tnum; i++) {
         if (pthread_join(threads[i], NULL) != 0) {
             fprintf(stderr, "system error: thread release error\n");
@@ -379,7 +383,10 @@ void JobContext::waiter() {
 }
 
 void JobContext::init_threads(JobHandle myJob) {
-    printf("initthreads\n");
+//    printf("initthreads\n");
+
+
+
     for (int i = 0; i < tnum-1; ++i) {
         if(pthread_create(threads + i, nullptr, mapper, myJob)!=0){
             fprintf(stderr, "system error: thread error\n");
