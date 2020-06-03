@@ -75,7 +75,7 @@ void getJobState(JobHandle job, JobState* state){
     myJob->get_state(state);
 }
 void closeJobHandle(JobHandle job){
-    printf("closing job\n");
+    //printf("closing job\n");
    // printf("closing \n");
     waitForJob(job);
     JobContext * myJob = (JobContext *) job;
